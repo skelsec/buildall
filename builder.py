@@ -59,6 +59,7 @@ INSTALL_ORDER = {
     'ofscandecrypt' : None,
     'pypykatz' : None,
     'pysnaffler' : None,
+    'jackdaw' : None,
     'octopwn' : None,
 }
 
@@ -277,11 +278,12 @@ def start(basedir:str = None, ssh_cmd:str = None, ssh_key:str = None, steps:int 
         exit(1)
     if steps <= 3:
         return
-    print('Running builder...')
-    result = os.system(str(builder_path))
-    if result != 0:
-        print('Builder failed with code %d' % result)
-        exit(1)
+    if platform.system() == 'Windows':
+        print('Running builder...')
+        result = os.system(str(builder_path))
+        if result != 0:
+            print('Builder failed with code %d' % result)
+            exit(1)
 
     print('Done!')
 
