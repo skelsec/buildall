@@ -4,6 +4,7 @@ import datetime
 import platform
 import venv
 import os
+import stat
 
 # LocalNTLMTest
 
@@ -99,18 +100,21 @@ def create_install_batch(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldi
     return installpath, builderpath
 
 def create_install_linux(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldir, install_order):
+    activate_path = venv_path.joinpath('bin', 'activate').absolute()
+    install_lines = ['#!/bin/bash']
+    install_lines.append('source ' + str(activate_path))
     for packagename in install_order:
         package_path = repo_path.joinpath(packagename).absolute()
         install_lines.append(f'cd {package_path} && pip install . && pip wheel . -w {wheeldir} --no-deps')
     
-    install_text = '@echo off\r\n'+' &^\r\n'.join(install_lines)
+    install_text = '\n'.join(install_lines)
     installpath = None
     if install_text is not None:
         installpath = repo_path.parent.joinpath('install.sh').absolute()
         with open(installpath, 'w', newline = '') as f:
             f.write(install_text)
-        stat = os.stat(installpath)
-        os.chmod(installpath, stat.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        fstat = os.stat(installpath)
+        os.chmod(installpath, fstat.st_mode | stat.S_IEXEC)
     
     return installpath, None
 
