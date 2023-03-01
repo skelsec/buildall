@@ -41,11 +41,10 @@ PORCHETTA_TOOLS = {
 
 INSTALL_ORDER = {
     'unicrypto' : None,
-    'asysocks' : None,
     'winacl' : None,
+    'asysocks' : None,
     'minikerberos' : None,
     'asyauth' : None,
-    'kerberoast' : None,
     'wsnet' : None,
     'aiowinreg' : None,
     'aesedb' : None,
@@ -53,6 +52,7 @@ INSTALL_ORDER = {
     'amurex' : None,
     'aiosmb' : None,
     'msldap' : None,
+    'kerberoast' : None,
     'aardwolf' : None,
     'aardwolfgui' : None,
     'evilrdp' : None,
