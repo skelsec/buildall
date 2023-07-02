@@ -5,6 +5,7 @@ import platform
 import venv
 import os
 import stat
+import glob
 
 # LocalNTLMTest
 
@@ -31,12 +32,16 @@ PORCHETTA_TOOLS = {
     'winsspi'      : ('main', 'Porchetta-Industries', 'python'),
     'wsnet'        : ('main', 'Porchetta-Industries', 'python'),
     'zipserver'    : ('main', 'Porchetta-Industries', '.net'),
-    'wsnet-dotnet' : ('main', 'Skelsec', '.net'),
-    'wsnet-nim'    : ('main', 'Skelsec', 'nim'),
-    'octopwn'      : ('main', 'Skelsec', 'python'),
-    'octopwnpage'  : ('main', 'Skelsec', 'python'),
-    'antlmrelay'   : ('main', 'Skelsec', 'python'),
-    'jackdaw'      : ('main', 'Skelsec', 'python'),
+    #'wsnet-dotnet' : ('main', 'Skelsec', '.net'),
+    #'wsnet-nim'    : ('main', 'Skelsec', 'nim'),
+    #'antlmrelay'   : ('main', 'Skelsec', 'python'),
+    #'jackdaw'      : ('main', 'Skelsec', 'python'),
+}
+
+GITHUB_TOOLS = {
+    'unidns'       : ('main', 'skelsec', 'python'),
+    'octopwn'      : ('main', 'octopwn', 'python'),
+    'octopwnpage'  : ('main', 'octopwn', 'web'),
 }
 
 INSTALL_ORDER = {
@@ -45,6 +50,7 @@ INSTALL_ORDER = {
     'asysocks' : None,
     'minikerberos' : None,
     'asyauth' : None,
+    'unidns': None,
     'wsnet' : None,
     'aiowinreg' : None,
     'aesedb' : None,
@@ -59,11 +65,9 @@ INSTALL_ORDER = {
     'ofscandecrypt' : None,
     'pypykatz' : None,
     'pysnaffler' : None,
-    'jackdaw' : None,
-    'octopwn' : None,
+    #'jackdaw' : None,
+    #'octopwn' : None,
 }
-
-
 
 def create_install_batch(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldir, install_order):
     results_path = repo_path.parent.joinpath('results')
@@ -103,12 +107,22 @@ def create_install_batch(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldi
 def create_install_linux(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldir, install_order):
     activate_path = venv_path.joinpath('bin', 'activate').absolute()
     install_lines = ['#!/bin/bash']
+    update_lines = ['#!/bin/bash']
     install_lines.append('source ' + str(activate_path))
     for packagename in install_order:
         package_path = repo_path.joinpath(packagename).absolute()
         install_lines.append(f'cd {package_path} && pip install . && pip wheel . -w {wheeldir} --no-deps')
+
+    for packagename in PORCHETTA_TOOLS:
+        package_path = repo_path.joinpath(packagename).absolute()
+        update_lines.append(f'cd {package_path} && git pull')
+    
+    for packagename in GITHUB_TOOLS:
+        package_path = repo_path.joinpath(packagename).absolute()
+        update_lines.append(f'cd {package_path} && git pull')
     
     install_text = '\n'.join(install_lines)
+   
     installpath = None
     if install_text is not None:
         installpath = repo_path.parent.joinpath('install.sh').absolute()
@@ -117,11 +131,23 @@ def create_install_linux(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldi
         fstat = os.stat(installpath)
         os.chmod(installpath, fstat.st_mode | stat.S_IEXEC)
     
+    if installpath is not None:
+        # start he install script finally
+        update_lines.append(f'cd {repo_path.parent.absolute()} && ./install.sh')
+    update_text = '\n'.join(update_lines)
+    if update_text is not None:
+        updatepath = repo_path.parent.joinpath('update.sh').absolute()
+        with open(updatepath, 'w', newline = '') as f:
+            f.write(update_text)
+        fstat = os.stat(updatepath)
+        os.chmod(updatepath, fstat.st_mode | stat.S_IEXEC)
+    
     return installpath, None
 
-def clone_github_repo(name, dstdir, branch = 'main'):
+def clone_github_repo(projectname, reponame, dstdir, branch = 'main'):
+    print(f'https://github.com/{reponame}/{projectname}')
     repo = Repo.clone_from(
-        f'https://github.com/skelsec/{name}',
+        f'https://github.com/{reponame}/{projectname}',
         str(dstdir),
         branch=branch
     )
@@ -189,33 +215,28 @@ def prepare_env_and_fetch_projects(basedir:pathlib.Path, ssh_cmd:str, steps:int 
     builddir.mkdir()
     wheeldir = builddir.joinpath('wheels')
     wheeldir.mkdir()
-    print('BUILD DIR: %s' % builddir)
-    print('WHEEL DIR: %s' % wheeldir)
-    #print('Fetching repos from Github...')
-    #for reponame in GITHUB_TOOLS:
-    #    dstfolder = builddir.joinpath('repos', reponame).absolute()
-    #    print('\tCloning %s to %s' % (reponame, dstfolder))
-    #    clone_github_repo(reponame, dstfolder, branch = GITHUB_TOOLS[reponame])
-    #    check_pyinstaller(reponame, dstfolder, INSTALL_ORDER)
-    #    check_license(reponame, dstfolder)
-    #    check_manifest(reponame, dstfolder)
-    #    check_version(reponame, dstfolder)
-    #    check_pyproject(reponame, dstfolder)
-    
-    print('Fetching repos from Porchetta Industries')
-    for projectname in PORCHETTA_TOOLS:
-        branchname, repouser, lang = PORCHETTA_TOOLS[projectname]
-        dstfolder = builddir.joinpath('repos', projectname).absolute()
-        print('\tCloning %s to %s' % (projectname, dstfolder))
-        clone_porchetta_repo(projectname, repouser, dstfolder, ssh_cmd, branch = branchname)
-        if lang.lower() == 'python':
-            check_pyinstaller(projectname, dstfolder, INSTALL_ORDER)
-            check_license(projectname, dstfolder)
-            check_version(projectname, dstfolder)
-            check_pyproject(projectname, dstfolder)
-            check_manifest(projectname, dstfolder)
-        else:
-            print('Not a python project, skipping checks')
+    #print('BUILD DIR: %s' % builddir)
+    #print('WHEEL DIR: %s' % wheeldir)
+    #for gitserverdef in [('GitHub',GITHUB_TOOLS), ('Porchetta',PORCHETTA_TOOLS)]:
+    for gitserverdef in [('Porchetta',PORCHETTA_TOOLS)]:
+        sname, GITSERVER = gitserverdef
+        print(f'Fetching repos from {sname}')
+        for projectname in GITSERVER:
+            branchname, repouser, lang = GITSERVER[projectname]
+            dstfolder = builddir.joinpath('repos', projectname).absolute()
+            print('\tCloning %s to %s' % (projectname, dstfolder))
+            if sname == 'GitHub':
+                clone_github_repo(projectname, repouser, dstfolder, branch = branchname)
+            else:
+                clone_porchetta_repo(projectname, repouser, dstfolder, ssh_cmd, branch = branchname)
+            if lang.lower() == 'python':
+                check_pyinstaller(projectname, dstfolder, INSTALL_ORDER)
+                check_license(projectname, dstfolder)
+                check_version(projectname, dstfolder)
+                check_pyproject(projectname, dstfolder)
+                check_manifest(projectname, dstfolder)
+            else:
+                print('Not a python project, skipping checks')
 
     if steps <= 1:
         return None, None
