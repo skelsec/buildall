@@ -26,4 +26,4 @@ jobs:
 
     - name: Run Batch File to Build project
       run: |
-        python buildall.py
+        python builer.py
