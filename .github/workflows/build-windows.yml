@@ -27,4 +27,4 @@ jobs:
 
     - name: Run Batch File to Build project
       run: |
-        python builder.py
+        python builder.py --steps 4
