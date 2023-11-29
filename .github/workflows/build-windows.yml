@@ -25,4 +25,5 @@ jobs:
         pip install pyinstaller virtualenv
 
     - name: Run Batch File to Build project
-      run: buildall.bat
+      run: |
+        python buildall.py
