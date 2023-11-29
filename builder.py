@@ -1,47 +1,45 @@
-from git import Repo, Git
+from git import Repo
 import pathlib
 import datetime
 import platform
 import venv
 import os
 import stat
-import glob
 
 # LocalNTLMTest
 
-PORCHETTA_TOOLS = {
-    'aiowinreg'    : ('main', 'Porchetta-Industries', 'python'),
-    'aesedb'       : ('main', 'Porchetta-Industries', 'python'),
-    'kerberoast'   : ('main', 'Porchetta-Industries', 'python'),
-    'unicrypto'    : ('main', 'Porchetta-Industries', 'python'),
-    'asyauth'      : ('main', 'Porchetta-Industries', 'python'),
-    'winacl'       : ('main', 'Porchetta-Industries', 'python'),
-    'minidump'     : ('main', 'Porchetta-Industries', 'python'),
-    'amurex'       : ('main', 'Porchetta-Industries', 'python'),
-    'aardwolfgui'  : ('main', 'Porchetta-Industries', 'python'),
-    'minikerberos' : ('main', 'Porchetta-Industries', 'python'),
-    'aiosmb'       : ('main', 'Porchetta-Industries', 'python'),
-    'msldap'       : ('main', 'Porchetta-Industries', 'python'),
-    'aardwolf'     : ('main', 'Porchetta-Industries', 'python'),
-    'pypykatz'     : ('main', 'Porchetta-Industries', 'python'),
-    'pysnaffler'   : ('main', 'Porchetta-Industries', 'python'),
-    'evilrdp'      : ('main', 'Porchetta-Industries', 'python'),
-    'ofscandecrypt': ('main', 'Porchetta-Industries', 'python'),
-    'asysocks'     : ('main', 'Porchetta-Industries', 'python'),
-    'flatkatz'     : ('main', 'Porchetta-Industries', 'python'),
-    'winsspi'      : ('main', 'Porchetta-Industries', 'python'),
-    'wsnet'        : ('main', 'Porchetta-Industries', 'python'),
-    'zipserver'    : ('main', 'Porchetta-Industries', '.net'),
+EXTRA_TOOLS = {
+    
+    #'zipserver'    : ('main', 'Porchetta-Industries', '.net'),
     #'wsnet-dotnet' : ('main', 'Skelsec', '.net'),
     #'wsnet-nim'    : ('main', 'Skelsec', 'nim'),
-    #'antlmrelay'   : ('main', 'Skelsec', 'python'),
-    #'jackdaw'      : ('main', 'Skelsec', 'python'),
 }
 
 GITHUB_TOOLS = {
+    'aiowinreg'    : ('main', 'skelsec', 'python'),
+    'aesedb'       : ('main', 'skelsec', 'python'),
+    'kerberoast'   : ('main', 'skelsec', 'python'),
+    'unicrypto'    : ('main', 'skelsec', 'python'),
+    'asyauth'      : ('main', 'skelsec', 'python'),
     'unidns'       : ('main', 'skelsec', 'python'),
-    'octopwn'      : ('main', 'octopwn', 'python'),
-    'octopwnpage'  : ('main', 'octopwn', 'web'),
+    'winacl'       : ('main', 'skelsec', 'python'),
+    'minidump'     : ('main', 'skelsec', 'python'),
+    'amurex'       : ('main', 'skelsec', 'python'),
+    'aardwolfgui'  : ('main', 'skelsec', 'python'),
+    'minikerberos' : ('main', 'skelsec', 'python'),
+    'aiosmb'       : ('main', 'skelsec', 'python'),
+    'msldap'       : ('main', 'skelsec', 'python'),
+    'aardwolf'     : ('main', 'skelsec', 'python'),
+    'pypykatz'     : ('main', 'skelsec', 'python'),
+    'pysnaffler'   : ('main', 'skelsec', 'python'),
+    'evilrdp'      : ('main', 'skelsec', 'python'),
+    'ofscandecrypt': ('main', 'skelsec', 'python'),
+    'asysocks'     : ('main', 'skelsec', 'python'),
+    #'flatkatz'     : ('main', 'skelsec', 'python'),
+    'winsspi'      : ('main', 'skelsec', 'python'),
+    'wsnet'        : ('main', 'skelsec', 'python'),
+    'jackdaw'      : ('main', 'skelsec', 'python'),
+    #'antlmrelay'   : ('main', 'skelsec', 'python'),
 }
 
 INSTALL_ORDER = {
@@ -51,7 +49,6 @@ INSTALL_ORDER = {
     'minikerberos' : None,
     'asyauth' : None,
     'unidns': None,
-    'wsnet' : None,
     'aiowinreg' : None,
     'aesedb' : None,
     'minidump' : None,
@@ -65,8 +62,8 @@ INSTALL_ORDER = {
     'ofscandecrypt' : None,
     'pypykatz' : None,
     'pysnaffler' : None,
-    #'jackdaw' : None,
-    #'octopwn' : None,
+    'wsnet' : None,
+    'jackdaw' : None,
 }
 
 def create_install_batch(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldir, install_order):
@@ -113,7 +110,7 @@ def create_install_linux(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldi
         package_path = repo_path.joinpath(packagename).absolute()
         install_lines.append(f'cd {package_path} && pip install . && pip wheel . -w {wheeldir} --no-deps')
 
-    for packagename in PORCHETTA_TOOLS:
+    for packagename in EXTRA_TOOLS:
         package_path = repo_path.joinpath(packagename).absolute()
         update_lines.append(f'cd {package_path} && git pull')
     
@@ -145,19 +142,18 @@ def create_install_linux(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldi
     return installpath, None
 
 def clone_github_repo(projectname, reponame, dstdir, branch = 'main'):
-    print(f'https://github.com/{reponame}/{projectname}')
     repo = Repo.clone_from(
         f'https://github.com/{reponame}/{projectname}',
         str(dstdir),
         branch=branch
     )
 
-def clone_porchetta_repo(projectname, reponame, dstdir, ssh_cmd, branch = 'main'):
+def clone_extra_repo(projectname, reponame, dstdir,  branch = 'main'):
     Repo.clone_from(
         f'git@ssh.git.porchetta.industries:{reponame}/{projectname}',
         str(dstdir),
         branch=branch,
-        env={'GIT_SSH_COMMAND': ssh_cmd}
+        #env={'GIT_SSH_COMMAND': ssh_cmd}
     )
 
 def check_pyinstaller(reponame, dstfolder:pathlib.Path, install_order):
@@ -210,15 +206,14 @@ def check_version(reponame, dstfolder:pathlib.Path):
     return True
 
 
-def prepare_env_and_fetch_projects(basedir:pathlib.Path, ssh_cmd:str, steps:int = 4):
+def prepare_env_and_fetch_projects(basedir:pathlib.Path, steps:int = 4):
     builddir = basedir.joinpath('build_'+datetime.datetime.now().strftime("%Y%m%d_%H%M%S")).absolute()
     builddir.mkdir()
     wheeldir = builddir.joinpath('wheels')
     wheeldir.mkdir()
     #print('BUILD DIR: %s' % builddir)
     #print('WHEEL DIR: %s' % wheeldir)
-    #for gitserverdef in [('GitHub',GITHUB_TOOLS), ('Porchetta',PORCHETTA_TOOLS)]:
-    for gitserverdef in [('Porchetta',PORCHETTA_TOOLS)]:
+    for gitserverdef in [('GitHub',GITHUB_TOOLS), ('Porchetta',EXTRA_TOOLS)]:
         sname, GITSERVER = gitserverdef
         print(f'Fetching repos from {sname}')
         for projectname in GITSERVER:
@@ -228,7 +223,7 @@ def prepare_env_and_fetch_projects(basedir:pathlib.Path, ssh_cmd:str, steps:int 
             if sname == 'GitHub':
                 clone_github_repo(projectname, repouser, dstfolder, branch = branchname)
             else:
-                clone_porchetta_repo(projectname, repouser, dstfolder, ssh_cmd, branch = branchname)
+                clone_extra_repo(projectname, repouser, dstfolder, branch = branchname)
             if lang.lower() == 'python':
                 check_pyinstaller(projectname, dstfolder, INSTALL_ORDER)
                 check_license(projectname, dstfolder)
@@ -255,36 +250,15 @@ def prepare_env_and_fetch_projects(basedir:pathlib.Path, ssh_cmd:str, steps:int 
     
     return installer_path, builder_path
 
-def start(basedir:str = None, ssh_cmd:str = None, ssh_key:str = None, steps:int = 4):
+def start(basedir:str = None, steps:int = 4):
     if basedir is None:
         basedir = pathlib.Path().absolute()
     else:
-        basedir = pathlib.Path(basedir).absolute()
-    if ssh_cmd is not None and ssh_key is not None:
-        print('SSH CMD and SSH KEY cannot be used together!')
-        exit(1)
-    if ssh_cmd is None:
-        if ssh_key is not None:
-            git_ssh_identity_file = pathlib.Path(ssh_key).absolute()
-        else:
-            git_ssh_identity_file = pathlib.Path('~/.ssh/id_rsa').expanduser()
-        
-        
-        if git_ssh_identity_file.exists() is False:
-            print('No SSH key found, please specify one! Or use --ssh-cmd to specify a custom command.')
-            exit(1)
-        if platform.system() == 'Windows':
-            # otherwise it doesnt find the file...
-            git_ssh_identity_file = str(git_ssh_identity_file).replace('\\', '\\\\')
-        ssh_cmd = 'ssh -i %s' % git_ssh_identity_file
-    
+        basedir = pathlib.Path(basedir).absolute()    
 
     print('BASEDIR: %s' % basedir)
-    if git_ssh_identity_file is not None:
-        print('GIT SSH IDENTITY FILE: %s' % git_ssh_identity_file)
-    print('GIT SSH CMD: %s' % ssh_cmd)
     print('Preparing environment and fetching projects...')
-    installer_path, builder_path = prepare_env_and_fetch_projects(basedir, ssh_cmd, steps)
+    installer_path, builder_path = prepare_env_and_fetch_projects(basedir, steps)
     if steps <= 2:
         return
     print('Installer path: %s' % installer_path)
@@ -312,12 +286,10 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--basedir', help='Base directory for the build', default = None)
-    argparser.add_argument('--sshcmd', help='SSH command to use for cloning. MUST contain the SSH key file as well!', default = None)
-    argparser.add_argument('--sshkey', help='SSH identity file to use for cloning', default = str(pathlib.Path('~/.ssh/id_rsa').expanduser()))
     argparser.add_argument('--steps', type=int, default = 3, help='1= Fetch repos, 2= Install, 3= Build, 4= All')
     args = argparser.parse_args()
     
-    start(args.basedir, args.sshcmd, args.sshkey, args.steps)
+    start(args.basedir, args.steps)
 
 if __name__ == '__main__':
     main()
