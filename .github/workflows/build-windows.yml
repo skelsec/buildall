@@ -3,7 +3,7 @@ name: Build Windows
 on:
   push:
     branches:
-      - master # Trigger on push to master branch
+      - main # Trigger on push to master branch
 
 jobs:
   build:
