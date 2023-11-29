@@ -26,4 +26,6 @@ jobs:
 
     - name: Run Batch File to Build project
       run: |
+        dir D:\a\buildall\buildall\
+        dir D:\a\buildall\
         python builer.py
