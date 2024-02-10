@@ -39,6 +39,8 @@ GITHUB_TOOLS = {
     'winsspi'      : ('main', 'skelsec', 'python'),
     'wsnet'        : ('main', 'skelsec', 'python'),
     'jackdaw'      : ('main', 'skelsec', 'python'),
+    'awinrm'       : ('main', 'skelsec', 'python'),
+    'aroadtools'   : ('main', 'skelsec', 'python'),
     #'antlmrelay'   : ('main', 'skelsec', 'python'),
 }
 
@@ -64,6 +66,8 @@ INSTALL_ORDER = {
     'pysnaffler' : None,
     'wsnet' : None,
     'jackdaw' : None,
+    'awinrm' : None,
+    'aroadtools' : None,
 }
 
 def create_install_batch(venv_path:pathlib.Path, repo_path:pathlib.Path, wheeldir, install_order):
